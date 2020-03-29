@@ -9,7 +9,7 @@ source of dataset:https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia/
 snapchot from dataset:
 
 Normal person==>
-
+![alt text](https://github.com/AhmedMokbel/Pneumonia-Classifier/blob/master/dataset/train/NORMAL/IM-0115-0001.jpeg)
 
 
 
