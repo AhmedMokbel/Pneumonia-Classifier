@@ -1,16 +1,20 @@
 import os
-from flask import Flask, render_template, session, redirect, url_for, flash ,request
+from flask import Flask, render_template, redirect, url_for, flash 
 from flask_bootstrap import Bootstrap
-from flask_wtf import FlaskForm
-from wtforms import SubmitField,FileField
-from wtforms.validators import DataRequired
-from tensorflow.keras.models import load_model
-import tensorflow as tf
+from tensorflow.keras.models import load_model 
+from tensorflow.keras.preprocessing import  image
 import numpy as np
-from PIL import Image
+from flask_wtf import FlaskForm
+from wtforms import SubmitField
+from flask_wtf.file import FileField, FileAllowed, FileRequired
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
+app.config['UPLOAD_FOLDER'] = "UPLOAD_FOLDER"
+
+
+
 
 # Bind to PORT if defined, otherwise default to 5000.
 port = int(os.environ.get('PORT', 5000))
@@ -18,14 +22,15 @@ port = int(os.environ.get('PORT', 5000))
 bootstrap = Bootstrap(app)
 
 def init():
-   global model ,graph
-   model = load_model('model.hdf5')
-   graph = tf.compat.v1.get_default_graph()
+  global model
+  model=load_model("model.hdf5")
    
-class NameForm(FlaskForm):
-    name = FileField('upload image', validators=[DataRequired()])
-    submit = SubmitField('Classify')
-
+class FileUploadForm(FlaskForm):
+    fileName = FileField('photo', validators=[
+        FileRequired(),
+        FileAllowed(['png', 'pdf','jpeg' ,'jpg'], "wrong format!")
+    ])
+    submit = SubmitField('classify')
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -39,31 +44,37 @@ def internal_server_error(e):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global score ,im2arr ,img
-    form = NameForm()
-    name=form.name.data
-    if request.method == 'POST':
-      if form.validate_on_submit():
+  
+    form = FileUploadForm()
+    photo=form.fileName.data
+    if form.validate_on_submit():
+        
+        test_image=image.load_img(photo , target_size=(150,150))
+        test_image=image.img_to_array(test_image)
+        test_image=np.expand_dims(test_image ,axis=0)
+        score=model.predict(test_image)  
+        """
         img = Image.open(name.stream).convert("L")
         img = np.resize(img, (150,150,3))        
         im2arr = np.array(img)
         im2arr = im2arr.reshape(1,150,150,3)
         score = model.predict(im2arr)
-        with graph.as_default():
-         if score[0][0] == 1:
+        """
+        if score[0][0] == 0:
            cond = 'Normal'
            category = 'success'
-         else :
+        else :
            cond = 'pneumonia'
            category = 'danger'
            
-        flash(' condition of x-ray image :' + cond + ')', category)
-        session['name'] = form.name.data
+        flash(' condition of x-ray :' +  cond  , category)
         return redirect(url_for('index'))
-    return render_template('index.html', form=form, name=session.get('name'))
+    return render_template('index.html', form=form)
 
 
 if __name__ == '__main__':
     init()
     app.run(host='0.0.0.0', port=port)
-    
+
+
+
