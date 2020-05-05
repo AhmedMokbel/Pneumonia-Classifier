@@ -15,6 +15,8 @@ Pneumonia person ==>
 ![alt text](https://github.com/AhmedMokbel/Pneumonia-Classifier/blob/master/dataset/train/PNEUMONIA/person1000_bacteria_2931.jpeg)
 
 ## Technologies Used
-tensorflow
+### Web Technologies
+Flask
 
-keras
+### Machine Learning Technologies
+Numpy , tensorflow , keras
